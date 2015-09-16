@@ -17,10 +17,6 @@
 #
 #   * the 'admin' role can only be assigned through the environment variable
 #   * roles are all transformed to lower case
-#
-#   * The script assumes that user IDs will be unique on the service end as to
-#     correctly identify a user. Names were insecure as a user could impersonate
-#     a user
 
 config =
   admin_list: process.env.HUBOT_AUTH_ADMIN
@@ -37,7 +33,7 @@ module.exports = (robot) ->
 
   class Auth
     isAdmin: (user) ->
-      user.id.toString() in admins
+      user.name in admins
 
     hasRole: (user, roles) ->
       userRoles = @userRoles(user)

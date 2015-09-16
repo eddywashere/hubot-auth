@@ -65,29 +65,33 @@ module.exports = (robot) ->
   robot.auth = new Auth
 
   robot.respond /@?(.+) ha(s|ve) (["'\w: -_]+) role/i, (msg) ->
+    name = msg.match[1].trim()
+    if name.toLowerCase() in ['', 'who', 'what', 'where', 'when', 'why']
+      return
     unless robot.auth.isAdmin msg.message.user
       msg.reply "Sorry, only admins can assign roles."
     else
-      name = msg.match[1].trim()
       if name.toLowerCase() is 'i' then name = msg.message.user.name
       newRole = msg.match[3].trim().toLowerCase()
 
-      unless name.toLowerCase() in ['', 'who', 'what', 'where', 'when', 'why']
-        user = robot.brain.userForName(name)
-        return msg.reply "#{name} does not exist" unless user?
-        user.roles or= []
+      user = robot.brain.userForName(name)
+      return msg.reply "#{name} does not exist" unless user?
+      user.roles or= []
 
-        if newRole in user.roles
-          msg.reply "#{name} already has the '#{newRole}' role."
+      if newRole in user.roles
+        msg.reply "#{name} already has the '#{newRole}' role."
+      else
+        if newRole is 'admin'
+          msg.reply "Sorry, the 'admin' role can only be defined in the HUBOT_AUTH_ADMIN env variable."
         else
-          if newRole is 'admin'
-            msg.reply "Sorry, the 'admin' role can only be defined in the HUBOT_AUTH_ADMIN env variable."
-          else
-            myRoles = msg.message.user.roles or []
-            user.roles.push(newRole)
-            msg.reply "OK, #{name} has the '#{newRole}' role."
+          myRoles = msg.message.user.roles or []
+          user.roles.push(newRole)
+          msg.reply "OK, #{name} has the '#{newRole}' role."
 
   robot.respond /@?(.+) do(n't|esn't|es)( not)? have (["'\w: -_]+) role/i, (msg) ->
+    name = msg.match[1].trim()
+    if name.toLowerCase() in ['', 'who', 'what', 'where', 'when', 'why']
+      return
     unless robot.auth.isAdmin msg.message.user
       msg.reply "Sorry, only admins can remove roles."
     else
@@ -95,17 +99,16 @@ module.exports = (robot) ->
       if name.toLowerCase() is 'i' then name = msg.message.user.name
       newRole = msg.match[4].trim().toLowerCase()
 
-      unless name.toLowerCase() in ['', 'who', 'what', 'where', 'when', 'why']
-        user = robot.brain.userForName(name)
-        return msg.reply "#{name} does not exist" unless user?
-        user.roles or= []
+      user = robot.brain.userForName(name)
+      return msg.reply "#{name} does not exist" unless user?
+      user.roles or= []
 
-        if newRole is 'admin'
-          msg.reply "Sorry, the 'admin' role can only be removed from the HUBOT_AUTH_ADMIN env variable."
-        else
-          myRoles = msg.message.user.roles or []
-          user.roles = (role for role in user.roles when role isnt newRole)
-          msg.reply "OK, #{name} doesn't have the '#{newRole}' role."
+      if newRole is 'admin'
+        msg.reply "Sorry, the 'admin' role can only be removed from the HUBOT_AUTH_ADMIN env variable."
+      else
+        myRoles = msg.message.user.roles or []
+        user.roles = (role for role in user.roles when role isnt newRole)
+        msg.reply "OK, #{name} doesn't have the '#{newRole}' role."
 
   robot.respond /what roles? do(es)? @?(.+) have\?*$/i, (msg) ->
     name = msg.match[2].trim()
